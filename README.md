@@ -1,6 +1,6 @@
-# 🤖 Jarvis AI
+# 🤖 Sentra AI
 
-Este es el proyecto de Jarvis, un asistente inteligente desarrollado en Python.
+Este es el proyecto de Sentra AI, un asistente inteligente desarrollado en Python.
 
 ## 🚀 Características
 - Interfaz gráfica intuitiva.
