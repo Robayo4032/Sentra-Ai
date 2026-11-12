@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Sentra Ai · asistente local con interfaz HUD. Uso:  python sentra_ai.py"""
+"""
+Sentra Ai · asistente local con interfaz HUD.
+Creado por Derek · github.com/DerekAI
+Uso:  python sentra_ai.py
+"""
 import os, sys, json, time, ast, re, base64, secrets, threading, subprocess, webbrowser, datetime, operator, ctypes, unicodedata, collections
 import urllib.request, urllib.parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -12,6 +16,9 @@ def _imp(n):
 ollama, psutil, sd, np = _imp('ollama'), _imp('psutil'), _imp('sounddevice'), _imp('numpy')
 try: from faster_whisper import WhisperModel
 except Exception: WhisperModel = None
+
+try: import voz_sentra_ai
+except Exception: voz_sentra_ai = None
 
 AQUI = os.path.dirname(os.path.abspath(__file__)); P = lambda f: os.path.join(AQUI, f)
 HOME = os.path.expanduser('~')
@@ -27,18 +34,30 @@ EV, UNDO, HIST, TURNO = [], [], [], threading.Lock()
 def ev(q, t): EV.append({'id': len(EV) + 1, 'q': q, 't': t})
 def norm(s): return ''.join(c for c in unicodedata.normalize('NFD', s.lower()) if unicodedata.category(c) != 'Mn').strip()
 
-# ---------- voz de salida (PowerShell/System.Speech: se puede interrumpir al instante) ----------
+# ---------- voz de salida (neuronal con fallback a PowerShell/System.Speech) ----------
 PS = ("Add-Type -AssemblyName System.Speech;$s=New-Object System.Speech.Synthesis.SpeechSynthesizer;"
       "$c=New-Object Globalization.CultureInfo 'es-ES';if($env:JVOZ){try{$s.SelectVoice($env:JVOZ)}catch{}}"
       "else{try{$s.SelectVoiceByHints('Male','NotSet',0,$c)}catch{try{$s.SelectVoiceByHints('NotSet','NotSet',0,$c)}catch{}}};$s.Speak($env:JTXT)")
 _tts = None
 def callar():
+    global _tts
+    if voz_sentra_ai:
+        try: voz_sentra_ai.callar()
+        except Exception: pass
     if _tts and _tts.poll() is None: _tts.kill()
+
 def hablar(t):
     global _tts
     callar()
     if not S['voz'] or sys.platform != 'win32': return
     S['estado'] = 'hablando'
+    if voz_sentra_ai:
+        try:
+            voz_sentra_ai.hablar(t)
+            if S['estado'] == 'hablando': S['estado'] = 'listo'
+            return
+        except Exception:
+            pass
     _tts = subprocess.Popen(['powershell', '-NoProfile', '-Command', PS], env=dict(os.environ, JTXT=t, JVOZ=CFG['voz']), creationflags=0x08000000)
     _tts.wait()
     if S['estado'] == 'hablando': S['estado'] = 'listo'
@@ -358,7 +377,9 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urllib.parse.urlparse(self.path); q = urllib.parse.parse_qs(u.query)
         if not self._auth(q): return self._send({'error': 'no autorizado'}, 403)
-        if u.path == '/': return self._send(None, ctype='text/html', raw=open(P('hud.html'), 'rb').read())
+        if u.path == '/':
+            raw = open(P('hud.html'), 'rb').read() if os.path.exists(P('hud.html')) else b'<!DOCTYPE html><html><body><h1>Sentra AI en linea</h1></body></html>'
+            return self._send(None, ctype='text/html', raw=raw)
         if u.path == '/api/estado': return self._send(estado(int(q.get('desde', ['0'])[0])))
         if u.path == '/api/mics': return self._send(lista_mics())
         self._send({'error': 'no existe'}, 404)

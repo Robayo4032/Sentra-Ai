@@ -1,5 +1,6 @@
-"""ollama.py (versión NUBE) - reemplaza al módulo 'ollama' para que JARVIS use un modelo gratis y rápido en internet.
-Ponlo en la MISMA carpeta que jarvis.py / jarvis_gui.py. No hay que cambiar nada más ni instalar nada.
+"""ollama.py (versión NUBE) - reemplaza al módulo 'ollama' para que Sentra AI use un modelo gratis y rápido en internet.
+Creado por Derek · github.com/DerekAI
+Ponlo en la MISMA carpeta que sentra_ai_gui.py. No hay que cambiar nada más ni instalar nada.
 Sirve con claves de Groq (gsk_...), Google Gemini (AIza...) o Cerebras (csk_...). Detecta solo el proveedor y el modelo."""
 import os, sys, json, time, urllib.request, urllib.error
 

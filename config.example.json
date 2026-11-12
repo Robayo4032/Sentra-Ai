@@ -1,0 +1,10 @@
+{
+  "nombre": "Sentra Ai",
+  "modelo": "llama3.1",
+  "vision": "llava",
+  "whisper": "base",
+  "mic": 1,
+  "voz": "",
+  "puerto": 8765,
+  "carpeta_git": ""
+}
